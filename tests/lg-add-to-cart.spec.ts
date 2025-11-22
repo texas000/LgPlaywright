@@ -270,31 +270,11 @@ test.describe('LG — PLP & PDP Add to Cart 테스트', () => {
           console.log('│ Field                   │ Value                                   │');
           console.log('├─────────────────────────┼─────────────────────────────────────────┤');
           console.log(`│ Cart ID                 │ ${String(cart.cartId).padEnd(39)} │`);
+          console.log(`│ Public Cart ID          │ ${String(cart.publicCartId).padEnd(39)} │`);
+          console.log(`│ Reserve Order ID        │ ${String(cart.reservedOrderId).padEnd(39)} │`);
           console.log(`│ Item Count              │ ${String(cart.itemCount).padEnd(39)} │`);
           console.log(`│ Total Quantity          │ ${String(cart.totalItemQty || 0).padEnd(39)} │`);
           console.log('└─────────────────────────┴─────────────────────────────────────────┘');
-          
-          // 중요한 정보만 선택적으로 추출
-          console.log('\n[Key API Response Data]');
-          console.log('─'.repeat(80));
-          
-          const selectedData: any = {
-            cartInfo: {
-              cartId: cart.cartId,
-              itemCount: cart.itemCount,
-              totalItemQty: cart.totalItemQty,
-              subtotal: cart.subtotalDisplayText,
-              grandTotal: cart.grandTotalDisplayText
-            },
-            items: cart.cartItemList?.map((item: any) => ({
-              name: item.name,
-              sku: item.sku,
-              qty: item.qty,
-              price: item.priceDisplayText
-            })) || []
-          };
-          
-          console.log(JSON.stringify(selectedData, null, 2));
           console.log('─'.repeat(80) + '\n');
         }
       } catch {
