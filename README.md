@@ -150,11 +150,13 @@ Add to Cart API status: 200
 ### Slack 알림 설정 (선택)
 Slack 알림을 받으려면 다음을 설정하세요:
 
-1. Slack Webhook URL 생성
+1. Slack에서 Incoming Webhook 생성 ([가이드](https://api.slack.com/messaging/webhooks))
 2. GitHub Repository → Settings → Secrets and variables → Actions
 3. New repository secret 추가:
    - Name: `SLACK_WEBHOOK`
    - Value: `your-slack-webhook-url`
+
+**참고**: `SLACK_WEBHOOK` secret이 설정되지 않아도 워크플로우는 정상 실행됩니다. Slack 알림 단계만 건너뜁니다.
 
 ### 워크플로우 실행 확인
 ```

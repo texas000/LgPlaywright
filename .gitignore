@@ -3,3 +3,11 @@ node_modules/
 dist/
 .env
 .DS_Store
+
+# Playwright test results
+test-results/
+playwright-report/
+*.png
+*.webm
+report.json
+test-output.log

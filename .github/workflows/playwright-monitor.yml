@@ -89,8 +89,9 @@ jobs:
 
       # 한국어: Slack 알림 - 실패 시 (선택, SLACK_WEBHOOK secret 설정 필요)
       - name: Send Slack notification on failure
-        if: failure() && secrets.SLACK_WEBHOOK != ''
+        if: failure()
         uses: rtCamp/action-slack-notify@v2
+        continue-on-error: true
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: "#ff0000"
@@ -107,8 +108,9 @@ jobs:
 
       # 한국어: Slack 알림 - 성공 시 (선택)
       - name: Send Slack notification on success
-        if: success() && secrets.SLACK_WEBHOOK != ''
+        if: success()
         uses: rtCamp/action-slack-notify@v2
+        continue-on-error: true
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: "#36a64f"
