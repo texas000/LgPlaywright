@@ -212,7 +212,122 @@ test.describe('LG TVs — 랜덤 제품 선택 후 장바구니 추가', () => {
       if (json && json.addModelToCart && json.addModelToCart.cart) {
         const cart = json.addModelToCart.cart;
         isSuccess = true;
-        console.log(`✅ 장바구니 추가 성공! Cart ID: ${cart.cartId}, 아이템 수: ${cart.itemCount}`);
+        
+        // 한국어: API 응답을 테이블 형식으로 출력
+        console.log('\n' + '='.repeat(80));
+        console.log('📦 Add to Cart API Response Summary');
+        console.log('='.repeat(80));
+        
+        // Cart 기본 정보
+        console.log('\n[Cart Information]');
+        console.log('┌─────────────────────────┬─────────────────────────────────────────┐');
+        console.log('│ Field                   │ Value                                   │');
+        console.log('├─────────────────────────┼─────────────────────────────────────────┤');
+        console.log(`│ Cart ID                 │ ${String(cart.cartId).padEnd(39)} │`);
+        console.log(`│ Item Count              │ ${String(cart.itemCount).padEnd(39)} │`);
+        console.log(`│ Total Quantity          │ ${String(cart.totalQuantity || 0).padEnd(39)} │`);
+        console.log('└─────────────────────────┴─────────────────────────────────────────┘');
+        
+        // 장바구니 아이템 상세
+        if (cart.items && cart.items.length > 0) {
+          console.log('\n[Cart Items Details]');
+          cart.items.forEach((item: any, index: number) => {
+            console.log(`\nItem #${index + 1}:`);
+            console.log('┌─────────────────────────┬─────────────────────────────────────────┐');
+            console.log('│ Field                   │ Value                                   │');
+            console.log('├─────────────────────────┼─────────────────────────────────────────┤');
+            
+            if (item.modelName) {
+              console.log(`│ Model Name              │ ${String(item.modelName).padEnd(39)} │`);
+            }
+            if (item.modelId) {
+              console.log(`│ Model ID                │ ${String(item.modelId).padEnd(39)} │`);
+            }
+            if (item.quantity !== undefined) {
+              console.log(`│ Quantity                │ ${String(item.quantity).padEnd(39)} │`);
+            }
+            if (item.price) {
+              console.log(`│ Price                   │ ${String(item.price).padEnd(39)} │`);
+            }
+            if (item.salesModelCode) {
+              console.log(`│ Sales Model Code        │ ${String(item.salesModelCode).padEnd(39)} │`);
+            }
+            
+            console.log('└─────────────────────────┴─────────────────────────────────────────┘');
+          });
+        }
+        
+        // 추가 정보
+        if (json.addModelToCart.success !== undefined) {
+          console.log('\n[API Response Status]');
+          console.log('┌─────────────────────────┬─────────────────────────────────────────┐');
+          console.log('│ Field                   │ Value                                   │');
+          console.log('├─────────────────────────┼─────────────────────────────────────────┤');
+          console.log(`│ Success                 │ ${String(json.addModelToCart.success).padEnd(39)} │`);
+          console.log('└─────────────────────────┴─────────────────────────────────────────┘');
+        }
+        
+        // 중요한 정보만 선택적으로 추출
+        console.log('\n[Key API Response Data - Selected Fields]');
+        console.log('─'.repeat(80));
+        
+        const selectedData: any = {
+          cartInfo: {
+            cartId: cart.cartId,
+            publicCartId: cart.publicCartId,
+            storeCode: cart.storeCode,
+            isGuest: cart.isGuest,
+            itemCount: cart.itemCount,
+            totalItemQty: cart.totalItemQty
+          },
+          pricing: {
+            listPriceTotal: cart.listPriceTotal,
+            subtotal: cart.subtotal,
+            discountTotal: cart.discountTotal,
+            taxAmountTotal: cart.taxAmountTotal,
+            shippingCostTotal: cart.shippingCostTotal,
+            grandTotal: cart.grandTotal,
+            displayTexts: {
+              listPriceTotal: cart.listPriceTotalDisplayText,
+              subtotal: cart.subtotalDisplayText,
+              discountTotal: cart.discountTotalDisplayText,
+              grandTotal: cart.grandTotalDisplayText
+            }
+          },
+          items: cart.cartItemList?.map((item: any) => ({
+            cartItemId: item.cartItemId,
+            sku: item.sku,
+            name: item.name,
+            description: item.description,
+            qty: item.qty,
+            pricing: {
+              listPrice: item.listPrice,
+              price: item.price,
+              discountAmount: item.discountAmount,
+              taxAmount: item.taxAmount,
+              displayTexts: {
+                listPrice: item.listPriceDisplayText,
+                price: item.priceDisplayText,
+                rowTotal: item.rowTotalDisplayText
+              }
+            },
+            attributes: {
+              sku: item.customAttributes?.sku,
+              pdpUrl: item.customAttributes?.pdpUrl,
+              fulfillmentType: item.customAttributes?.fulfillment_type,
+              zipCode: item.customAttributes?.zipCode,
+              enabledBopis: item.customAttributes?.enabledBopis,
+              inventory: item.customAttributes?.inventory
+            }
+          })) || []
+        };
+        
+        console.log(JSON.stringify(selectedData, null, 2));
+        console.log('─'.repeat(80));
+        
+        console.log('\n' + '='.repeat(80));
+        console.log('✅ 장바구니 추가 성공!');
+        console.log('='.repeat(80) + '\n');
       } else {
         // 일반적인 성공 키 체크
         const possibleSuccessKeys = [
