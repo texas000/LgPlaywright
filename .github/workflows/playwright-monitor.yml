@@ -68,8 +68,8 @@ jobs:
         continue-on-error: true   # 실패해도 다음 단계(리포트 업로드)를 진행
         env:
           CI: true
-          LG_MEMBER_EMAIL: ${{ secrets.LG_MEMBER_EMAIL }}
-          LG_MEMBER_PASSWORD: ${{ secrets.LG_MEMBER_PASSWORD }}
+          PM_MEMBER_EMAIL: ${{ secrets.PM_MEMBER_EMAIL }}
+          PM_MEMBER_PASSWORD: ${{ secrets.PM_MEMBER_PASSWORD }}
 
       # 한국어: 테스트 결과 요약 출력
       - name: Display Test Summary
