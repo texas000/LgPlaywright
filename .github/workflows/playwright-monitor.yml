@@ -25,17 +25,42 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 한국어: Node 설치
+      # 한국어: Node 설치 (npm 캐시 활성화)
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'npm'
 
-      # 한국어: Playwright 설치
+      # 한국어: npm 의존성 캐시
+      - name: Cache node modules
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # 한국어: Playwright 브라우저 캐시
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      # 한국어: npm 의존성 설치 (캐시 미스일 때만)
       - name: Install dependencies
-        run: |
-          npm ci
-          npx playwright install --with-deps
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      # 한국어: Playwright 브라우저 설치 (캐시 미스일 때만)
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps
 
       # 한국어: 테스트 실행 (LG Add to Cart 테스트)
       - name: Run Playwright tests

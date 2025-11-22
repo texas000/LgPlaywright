@@ -220,7 +220,10 @@ Add to Cart API status: 200
 ### 워크플로우 기능
 - ✅ Ubuntu 최신 환경에서 실행
 - ✅ Node.js 18 사용
-- ✅ Playwright 브라우저 자동 설치
+- ✅ **의존성 캐싱** (npm 및 Playwright 브라우저)
+  - npm 패키지 캐시로 설치 시간 단축
+  - Playwright 브라우저 캐시로 다운로드 시간 절약
+  - `package-lock.json` 기반 캐시 키 생성
 - ✅ 타임아웃: 120초 (테스트별), 15분 (전체 job)
 - ✅ HTML 리포트 자동 생성 및 업로드
 - ✅ 실패 시 trace, 스크린샷, 비디오 저장 (30일 보관)
@@ -246,6 +249,27 @@ GitHub Repository → Actions 탭 → LG Production Synthetic Monitor
 테스트 실행 후 다음을 다운로드할 수 있습니다:
 - **html-report-[번호]**: HTML 형식의 테스트 리포트
 - **test-artifacts-[번호]**: 스크린샷, trace 파일, 비디오
+
+### 캐시 동작 방식
+GitHub Actions는 다음 항목들을 자동으로 캐시합니다:
+
+1. **npm 의존성 캐시**
+   - 경로: `node_modules/`
+   - 캐시 키: `package-lock.json` 해시값 기반
+   - 효과: npm 패키지 설치 시간 단축 (30초 → 5초)
+
+2. **Playwright 브라우저 캐시**
+   - 경로: `~/.cache/ms-playwright`
+   - 캐시 키: `package-lock.json` 해시값 기반
+   - 효과: 브라우저 다운로드 시간 절약 (2분 → 10초)
+
+3. **캐시 무효화**
+   - `package-lock.json` 변경 시 자동으로 새로운 캐시 생성
+   - 이전 캐시는 7일 후 자동 삭제
+
+**예상 성능 향상:**
+- 첫 실행: ~3-4분 (캐시 없음)
+- 이후 실행: ~1-2분 (캐시 사용) ⚡
 
 ## 🔧 설정 파일
 
