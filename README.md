@@ -1,8 +1,21 @@
 # LgPlaywright
-LG PRD TEST - Add to Cart 자동화 테스트
+LG E-Commerce 자동화 테스트 스위트
 
 ## 📋 프로젝트 설명
-이 프로젝트는 LG 웹사이트의 TV 제품 페이지에서 랜덤으로 제품을 선택하고 장바구니에 추가하는 과정을 자동화하는 Playwright 테스트입니다.
+이 프로젝트는 LG 웹사이트의 다양한 기능을 자동화 테스트하는 Playwright 테스트 스위트입니다:
+
+### 테스트 목록
+1. **Add to Cart 테스트** (`lg-add-to-cart.spec.ts`)
+   - PLP(Product List Page)에서 Add to Cart
+   - PDP(Product Detail Page)에서 Add to Cart
+   - 랜덤 제품 카테고리 선택 (TVs, Monitors, Laptops, Refrigerators, Dishwashers, Projectors)
+   - API 응답 검증
+
+2. **LG Members 로그인 테스트** (`lg-member-login.spec.ts`)
+   - LG Members store 로그인
+   - 로그인 시간 측정
+   - API 응답 수집 및 분석
+   - 환경변수(.env)에서 자격증명 로드
 
 ## 🛠️ 설치 방법
 ```bash
@@ -13,18 +26,33 @@ npm install
 npx playwright install
 ```
 
+## 🔐 환경 설정
+로그인 테스트를 실행하려면 `.env` 파일을 생성하고 자격증명을 설정하세요:
+
+```bash
+# .env 파일 생성
+PM_MEMBER_EMAIL=your-email@example.com
+PM_MEMBER_PASSWORD=your-password
+```
+
+**주의**: `.env` 파일은 `.gitignore`에 포함되어 있어 Git에 커밋되지 않습니다.
+
 ## 🐛 로컬 디버깅 방법
 
-### 1. 기본 실행 (Headless 모드)
-백그라운드에서 빠르게 테스트를 실행합니다.
+### 1. 모든 테스트 실행 (Headless 모드)
+백그라운드에서 빠르게 모든 테스트를 실행합니다.
 ```bash
 npx playwright test
 ```
 
-### 2. Headed 모드로 실행 (추천 ⭐)
+### 2. 특정 테스트만 실행 (Headed 모드 - 추천 ⭐)
 브라우저 창을 보면서 테스트를 실행합니다. 가장 직관적인 디버깅 방법입니다.
 ```bash
+# Add to Cart 테스트만 실행
 npx playwright test tests/lg-add-to-cart.spec.ts --headed
+
+# 로그인 테스트만 실행
+npx playwright test tests/lg-member-login.spec.ts --headed
 ```
 
 ### 3. UI 모드로 실행
