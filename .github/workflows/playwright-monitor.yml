@@ -171,8 +171,8 @@ jobs:
         continue-on-error: true
         env:
           CI: true
-          LG_MEMBER_EMAIL: ${{ secrets.PM_MEMBER_EMAIL }}
-          LG_MEMBER_PASSWORD: ${{ secrets.PM_MEMBER_PASSWORD }}
+          PM_MEMBER_EMAIL: ${{ secrets.PM_MEMBER_EMAIL }}
+          PM_MEMBER_PASSWORD: ${{ secrets.PM_MEMBER_PASSWORD }}
 
       - name: Display Test Summary
         if: always()
