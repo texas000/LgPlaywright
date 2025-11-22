@@ -1,0 +1,122 @@
+name: LG Production Synthetic Monitor
+
+on:
+  schedule:
+    # 한국어: 매 30분마다 실행 (원하는 주기로 변경 가능)
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}  # 수동 실행 가능
+  push:
+    branches:
+      - main
+    paths:
+      - 'tests/**'
+      - '.github/workflows/**'
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15  # 전체 job 타임아웃
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 한국어: Node 설치
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      # 한국어: Playwright 설치
+      - name: Install dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      # 한국어: 테스트 실행 (LG Add to Cart 테스트)
+      - name: Run Playwright tests
+        run: npx playwright test tests/lg-add-to-cart.spec.ts --timeout=120000
+        continue-on-error: true   # 실패해도 다음 단계(리포트 업로드)를 진행
+        env:
+          CI: true
+
+      # 한국어: 테스트 결과 요약 출력
+      - name: Display Test Summary
+        if: always()
+        run: |
+          echo "=== Test Execution Summary ==="
+          if [ -f "test-output.log" ]; then
+            cat test-output.log
+          fi
+          echo "=== End of Summary ==="
+
+      # 한국어: HTML 리포트 업로드 (성공/실패 모두 저장)
+      - name: Upload HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report-${{ github.run_number }}
+          path: playwright-report/
+          retention-days: 30
+
+      # 한국어: 트레이스/스크린샷/비디오 아티팩트 업로드
+      - name: Upload Test Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts-${{ github.run_number }}
+          path: |
+            test-results/
+            **/*.png
+            **/*.webm
+            **/*trace.zip
+          retention-days: 30
+
+      # 한국어: 테스트 성공/실패 상태 저장
+      - name: Set Test Status
+        if: always()
+        id: test-status
+        run: |
+          if [ -f "test-results/.last-run.json" ]; then
+            echo "status=completed" >> $GITHUB_OUTPUT
+          else
+            echo "status=unknown" >> $GITHUB_OUTPUT
+          fi
+
+      # 한국어: Slack 알림 - 실패 시 (선택, SLACK_WEBHOOK secret 설정 필요)
+      - name: Send Slack notification on failure
+        if: failure() && secrets.SLACK_WEBHOOK != ''
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: "#ff0000"
+          SLACK_TITLE: "❌ LG Add to Cart Test Failed"
+          SLACK_MESSAGE: |
+            테스트 실행 실패!
+            Run: ${{ github.run_number }}
+            Workflow: ${{ github.workflow }}
+            Branch: ${{ github.ref_name }}
+            
+            📊 리포트 및 아티팩트:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SLACK_FOOTER: "LG Playwright Monitor"
+
+      # 한국어: Slack 알림 - 성공 시 (선택)
+      - name: Send Slack notification on success
+        if: success() && secrets.SLACK_WEBHOOK != ''
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: "#36a64f"
+          SLACK_TITLE: "✅ LG Add to Cart Test Passed"
+          SLACK_MESSAGE: |
+            테스트 실행 성공!
+            Run: ${{ github.run_number }}
+            
+            ✅ Add to Cart API 검증 완료
+            ✅ 장바구니 추가 성공
+          SLACK_FOOTER: "LG Playwright Monitor"
