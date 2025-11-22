@@ -17,22 +17,21 @@ permissions:
   actions: write
 
 jobs:
-  monitor:
+  obs-monitor:
+    name: OBS Store Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15  # 전체 job 타임아웃
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 한국어: Node 설치 (npm 캐시 활성화)
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'npm'
 
-      # 한국어: npm 의존성 캐시
       - name: Cache node modules
         uses: actions/cache@v4
         id: npm-cache
@@ -42,7 +41,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      # 한국어: Playwright 브라우저 캐시
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: playwright-cache
@@ -52,50 +50,42 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-playwright-
 
-      # 한국어: npm 의존성 설치 (캐시 미스일 때만)
       - name: Install dependencies
         if: steps.npm-cache.outputs.cache-hit != 'true'
         run: npm ci
 
-      # 한국어: Playwright 브라우저 설치 (캐시 미스일 때만)
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps
 
-      # 한국어: 테스트 실행 (LG Add to Cart 및 Login 테스트)
-      - name: Run Playwright tests
-        run: npx playwright test tests/lg-add-to-cart.spec.ts tests/lg-member-login.spec.ts --timeout=180000
-        continue-on-error: true   # 실패해도 다음 단계(리포트 업로드)를 진행
+      - name: Run OBS Add to Cart Test
+        run: npx playwright test tests/lg-add-to-cart.spec.ts --timeout=120000
+        continue-on-error: true
         env:
           CI: true
-          PM_MEMBER_EMAIL: ${{ secrets.PM_MEMBER_EMAIL }}
-          PM_MEMBER_PASSWORD: ${{ secrets.PM_MEMBER_PASSWORD }}
 
-      # 한국어: 테스트 결과 요약 출력
       - name: Display Test Summary
         if: always()
         run: |
-          echo "=== Test Execution Summary ==="
+          echo "=== OBS Test Execution Summary ==="
           if [ -f "test-output.log" ]; then
             cat test-output.log
           fi
           echo "=== End of Summary ==="
 
-      # 한국어: HTML 리포트 업로드 (성공/실패 모두 저장)
       - name: Upload HTML Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: html-report-${{ github.run_number }}
+          name: obs-html-report-${{ github.run_number }}
           path: playwright-report/
           retention-days: 30
 
-      # 한국어: 트레이스/스크린샷/비디오 아티팩트 업로드
       - name: Upload Test Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-artifacts-${{ github.run_number }}
+          name: obs-test-artifacts-${{ github.run_number }}
           path: |
             test-results/
             **/*.png
@@ -103,18 +93,6 @@ jobs:
             **/*trace.zip
           retention-days: 30
 
-      # 한국어: 테스트 성공/실패 상태 저장
-      - name: Set Test Status
-        if: always()
-        id: test-status
-        run: |
-          if [ -f "test-results/.last-run.json" ]; then
-            echo "status=completed" >> $GITHUB_OUTPUT
-          else
-            echo "status=unknown" >> $GITHUB_OUTPUT
-          fi
-
-      # 한국어: Slack 알림 - 실패 시 (선택, SLACK_WEBHOOK secret 설정 필요)
       - name: Send Slack notification on failure
         if: failure()
         uses: rtCamp/action-slack-notify@v2
@@ -122,18 +100,16 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: "#ff0000"
-          SLACK_TITLE: "❌ LG Tests Failed"
+          SLACK_TITLE: "❌ OBS Add to Cart Test Failed"
           SLACK_MESSAGE: |
-            테스트 실행 실패!
+            OBS 테스트 실행 실패!
             Run: ${{ github.run_number }}
             Workflow: ${{ github.workflow }}
             Branch: ${{ github.ref_name }}
             
-            📊 리포트 및 아티팩트:
-            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          SLACK_FOOTER: "LG Playwright Monitor"
+            📊 리포트: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SLACK_FOOTER: "LG OBS Monitor"
 
-      # 한국어: Slack 알림 - 성공 시 (선택)
       - name: Send Slack notification on success
         if: success()
         uses: rtCamp/action-slack-notify@v2
@@ -141,11 +117,120 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: "#36a64f"
-          SLACK_TITLE: "✅ LG Tests Passed"
+          SLACK_TITLE: "✅ OBS Add to Cart Test Passed"
           SLACK_MESSAGE: |
-            테스트 실행 성공!
+            OBS 테스트 실행 성공!
             Run: ${{ github.run_number }}
             
             ✅ Add to Cart 테스트 성공
+          SLACK_FOOTER: "LG OBS Monitor"
+
+  pm-monitor:
+    name: PM Store Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps
+
+      - name: Run PM Member Login Test
+        run: npx playwright test tests/lg-member-login.spec.ts --timeout=180000
+        continue-on-error: true
+        env:
+          CI: true
+          LG_MEMBER_EMAIL: ${{ secrets.PM_MEMBER_EMAIL }}
+          LG_MEMBER_PASSWORD: ${{ secrets.PM_MEMBER_PASSWORD }}
+
+      - name: Display Test Summary
+        if: always()
+        run: |
+          echo "=== PM Test Execution Summary ==="
+          if [ -f "test-output.log" ]; then
+            cat test-output.log
+          fi
+          echo "=== End of Summary ==="
+
+      - name: Upload HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pm-html-report-${{ github.run_number }}
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload Test Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pm-test-artifacts-${{ github.run_number }}
+          path: |
+            test-results/
+            **/*.png
+            **/*.webm
+            **/*trace.zip
+          retention-days: 30
+
+      - name: Send Slack notification on failure
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        continue-on-error: true
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: "#ff0000"
+          SLACK_TITLE: "❌ PM Member Login Test Failed"
+          SLACK_MESSAGE: |
+            PM 테스트 실행 실패!
+            Run: ${{ github.run_number }}
+            Workflow: ${{ github.workflow }}
+            Branch: ${{ github.ref_name }}
+            
+            📊 리포트: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SLACK_FOOTER: "LG PM Monitor"
+
+      - name: Send Slack notification on success
+        if: success()
+        uses: rtCamp/action-slack-notify@v2
+        continue-on-error: true
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: "#36a64f"
+          SLACK_TITLE: "✅ PM Member Login Test Passed"
+          SLACK_MESSAGE: |
+            PM 테스트 실행 성공!
+            Run: ${{ github.run_number }}
+            
             ✅ Member Login 테스트 성공
-          SLACK_FOOTER: "LG Playwright Monitor"
+          SLACK_FOOTER: "LG PM Monitor"
