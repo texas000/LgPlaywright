@@ -62,12 +62,14 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps
 
-      # 한국어: 테스트 실행 (LG Add to Cart 테스트)
+      # 한국어: 테스트 실행 (LG Add to Cart 및 Login 테스트)
       - name: Run Playwright tests
-        run: npx playwright test tests/lg-add-to-cart.spec.ts --timeout=120000
+        run: npx playwright test tests/lg-add-to-cart.spec.ts tests/lg-member-login.spec.ts --timeout=180000
         continue-on-error: true   # 실패해도 다음 단계(리포트 업로드)를 진행
         env:
           CI: true
+          LG_MEMBER_EMAIL: ${{ secrets.LG_MEMBER_EMAIL }}
+          LG_MEMBER_PASSWORD: ${{ secrets.LG_MEMBER_PASSWORD }}
 
       # 한국어: 테스트 결과 요약 출력
       - name: Display Test Summary
@@ -120,7 +122,7 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: "#ff0000"
-          SLACK_TITLE: "❌ LG Add to Cart Test Failed"
+          SLACK_TITLE: "❌ LG Tests Failed"
           SLACK_MESSAGE: |
             테스트 실행 실패!
             Run: ${{ github.run_number }}
@@ -139,11 +141,11 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: "#36a64f"
-          SLACK_TITLE: "✅ LG Add to Cart Test Passed"
+          SLACK_TITLE: "✅ LG Tests Passed"
           SLACK_MESSAGE: |
             테스트 실행 성공!
             Run: ${{ github.run_number }}
             
-            ✅ Add to Cart API 검증 완료
-            ✅ 장바구니 추가 성공
+            ✅ Add to Cart 테스트 성공
+            ✅ Member Login 테스트 성공
           SLACK_FOOTER: "LG Playwright Monitor"
